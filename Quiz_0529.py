@@ -1,4 +1,3 @@
-print(" HR 데이터 기반 이직 예측 실습 ")
 
 # 라이브러리 호출
 import pandas as pd
@@ -41,4 +40,33 @@ accuracy = accuracy_score(y_test, y_pred)
 conf_matrix = confusion_matrix(y_test, y_pred)
 print("정확도:", accuracy)
 print("혼동행렬:\n", conf_matrix)
+# 결과 해석: 정확도는 0.85이고, 혼동행렬을 봤을 때 이직하는 안 하는 직원은 잘 예측했지만 이직하는 직원은 다수 틀렸음.
+
+# 7. 예측 결과 분석
+y_proba = model.predict_proba(X_test)[:, 1]
+X_test_with_proba = X_test.copy()
+X_test_with_proba["이직확률"] = y_proba
+top5_risk = X_test_with_proba.sort_values(by="이직확률", ascending=False).head(5)
+print("이직 예측 직원 수:", (y_pred == 1).sum())
+print("상위 이직 위험 직원 5명:\n", top5_risk) 
+
+# 8. 신입사원 예측
+data = [
+    {"Age": 29, "출장빈도": 2, "부서": 1, "야근여부": 1, "업무만족도": 2, "집까지거리": 5, "근무환경만족도": 2, "워라밸": 2},
+    {"Age": 42, "출장빈도": 0, "부서": 0, "야근여부": 0, "업무만족도": 4, "집까지거리": 10, "근무환경만족도": 3, "워라밸": 3},
+    {"Age": 35, "출장빈도": 1, "부서": 2, "야근여부": 1, "업무만족도": 1, "집까지거리": 2, "근무환경만족도": 1, "워라밸": 2},
+]
+new_df = pd.DataFrame(data)
+new_preds = model.predict(new_df)
+print("신입사원 이직 예측:", new_preds.tolist())
+
+# 9. 이직 영향 컬럼 파악 및 결과 해석
+importances = model.feature_importances_
+features = X_train.columns
+importance = pd.Series(importances, index=features).sort_values(ascending=False)
+# 상위 3개 피처 출력
+top3_features = importance.head(3)
+print("피처 중요도 상위 3개:")
+print(top3_features)
+# Age: 젊을수록 안정성이 낮고 이직하려는 경향 높음, 집까지거리: 거리가 멀고 출퇴근 시간 오래 걸릴 수록 이직 가능성이 높아짐, 업무만족도: 업무에 대한 성취감과 만족감이 낮을 수록 다른 직무나 회사를 찾아 이직함
 
